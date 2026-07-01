@@ -69,6 +69,13 @@ You only need an up-to-date modern web browser (Chrome, Firefox, Safari, Edge).
      Then navigate to `http://localhost:8000` in your web browser.
 
 ---
+## 🧪 Quick Test (Try it out!)
+
+Want to see how it works instantly? You don't need to hunt for your own transcript file. We have provided a sample tracking file directly in this repository.
+
+1. **Download the sample file:** Right-click [📥 transcript.txt](transcript.txt) and select **"Save Link As..."** to save it to your computer.
+2. **Open the web app:** Head over to the [Live Demo](https://github.io).
+3. **Drop it in:** Drag and drop that `transcript.txt` file straight into the upload area to see the timestamps and technical metadata disappear instantly!
 
 ## 🤝 Contributing
 
