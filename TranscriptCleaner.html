@@ -1,0 +1,886 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TranscriptCleaner — Strip timestamps instantly</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #08111f;
+      --surface:   #0e1b2e;
+      --surface2:  #152438;
+      --border:    rgba(100,180,255,0.08);
+      --border-h:  rgba(100,180,255,0.16);
+      --cyan:      #22d3ee;
+      --cyan-dim:  rgba(34,211,238,0.11);
+      --cyan-glow: rgba(34,211,238,0.05);
+      --text:      #ddeeff;
+      --text-dim:  #3d5a78;
+      --text-mid:  #7a9bb8;
+      --success:   #34d399;
+      --danger:    #f06060;
+      --radius:    12px;
+      --radius-lg: 18px;
+      --mono:      'JetBrains Mono', monospace;
+      --sans:      'Syne', sans-serif;
+    }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0 0 80px;
+      line-height: 1.6;
+    }
+
+    header {
+      padding: 28px 24px 0;
+      max-width: 780px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 34px;
+      height: 34px;
+      background: var(--cyan);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg { display: block; }
+
+    .logo-text {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--text);
+    }
+
+    .logo-text span { color: var(--cyan); }
+
+    .badge {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      letter-spacing: 0.04em;
+    }
+
+    .hero {
+      max-width: 780px;
+      margin: 40px auto 0;
+      padding: 0 24px;
+    }
+
+    .hero h1 {
+      font-size: clamp(28px, 5vw, 42px);
+      font-weight: 700;
+      letter-spacing: -1px;
+      line-height: 1.15;
+      color: var(--text);
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      font-weight: 700;
+      background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      margin-top: 12px;
+      font-size: 15px;
+      color: var(--text-mid);
+      max-width: 460px;
+      line-height: 1.65;
+      font-weight: 400;
+    }
+
+    .formats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .format-pill {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+    }
+
+    .main {
+      max-width: 780px;
+      margin: 32px auto 0;
+      padding: 0 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .drop-zone {
+      border: 1.5px dashed var(--border-h);
+      border-radius: var(--radius-lg);
+      padding: 44px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+      background: var(--surface);
+    }
+
+    .drop-zone:hover,
+    .drop-zone.drag-over {
+      border-color: var(--cyan);
+      background: var(--cyan-glow);
+    }
+
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .drop-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: var(--cyan-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+
+    .drop-icon svg { display: block; }
+
+    .drop-zone h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .drop-zone p {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    .drop-zone p strong {
+      color: var(--cyan);
+      font-weight: 600;
+    }
+
+    .file-name {
+      margin-top: 12px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--success);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .file-name.visible { display: flex; }
+
+    .options-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .option-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      user-select: none;
+      flex: 1 1 160px;
+    }
+
+    .option-chip:hover { border-color: var(--border-h); }
+    .option-chip.active {
+      border-color: var(--cyan);
+      background: var(--cyan-dim);
+    }
+
+    .option-chip input { display: none; }
+
+    .chip-box {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      border: 1.5px solid var(--text-dim);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .option-chip.active .chip-box {
+      background: var(--cyan);
+      border-color: var(--cyan);
+    }
+
+    .chip-check {
+      display: none;
+    }
+
+    .option-chip.active .chip-check { display: block; }
+
+    .chip-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-mid);
+    }
+
+    .option-chip.active .chip-label { color: var(--text); }
+
+    .btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn-primary {
+      padding: 14px 10px;
+      border-radius: var(--radius);
+      border: none;
+      background: var(--cyan);
+      color: #08111f;
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.01em;
+      transition: opacity 0.15s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      white-space: nowrap;
+    }
+
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .btn-secondary {
+      padding: 14px 10px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-h);
+      background: var(--surface);
+      color: var(--text-mid);
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.01em;
+      transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      white-space: nowrap;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      background: var(--cyan-dim);
+    }
+
+    .btn-secondary:active { transform: scale(0.98); }
+    .btn-secondary:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    @media (max-width: 520px) {
+      .btn-row { grid-template-columns: 1fr; }
+    }
+
+    .stats-bar {
+      display: none;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .stats-bar.visible { display: grid; }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+    }
+
+    .stat-card .label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-dim);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .stat-card .value {
+      font-family: var(--mono);
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--cyan);
+    }
+
+    .output-wrap {
+      display: none;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .output-wrap.visible { display: flex; }
+
+    .output-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 10px 16px;
+    }
+
+    .output-header span {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dim);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .output-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-sm {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-mid);
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .btn-sm:hover {
+      border-color: var(--border-h);
+      color: var(--text);
+      background: var(--surface2);
+    }
+
+    .btn-sm.copied {
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    .btn-sm svg { flex-shrink: 0; }
+
+    textarea#output {
+      width: 100%;
+      min-height: 300px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 var(--radius) var(--radius);
+      padding: 18px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.75;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    textarea#output:focus { border-color: var(--border-h); }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface2);
+      border: 1px solid var(--border-h);
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.25s, transform 0.25s;
+      z-index: 99;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    footer {
+      max-width: 780px;
+      margin: 48px auto 0;
+      padding: 0 24px;
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    footer p {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    footer a {
+      color: var(--cyan);
+      text-decoration: none;
+    }
+
+    @media (max-width: 500px) {
+      .stats-bar { grid-template-columns: 1fr 1fr; }
+      .stat-card:last-child { grid-column: 1 / -1; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M3 5h12M3 9h8M3 13h5" stroke="#08111f" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="logo-text">Transcript<span>Cleaner</span></span>
+    </div>
+    <span class="badge">v1.0</span>
+  </header>
+
+  <section class="hero">
+    <h1>Fast Format.<br><em>Feed AI instantly.</em></h1>
+    <p>Upload any YouTube transcript, SRT, or VTT caption file and get clean, readable text — ready to paste into ChatGPT, Claude, or any AI in one click.</p>
+    <div class="formats">
+      <span class="format-pill">00:00:00.000</span>
+      <span class="format-pill">[00:00:00]</span>
+      <span class="format-pill">00:00</span>
+      <span class="format-pill">→ SRT arrows</span>
+      <span class="format-pill">WEBVTT headers</span>
+      <span class="format-pill">NOTE blocks</span>
+    </div>
+  </section>
+
+  <main class="main">
+
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="fileInput" accept=".txt,.srt,.vtt" />
+      <div class="drop-icon">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+          <path d="M11 14V4M11 4L7.5 7.5M11 4L14.5 7.5" stroke="#22d3ee" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M3 15v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="#22d3ee" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2>Drop your file here</h2>
+      <p>or <strong>click to browse</strong> — .txt, .srt, .vtt supported</p>
+      <div class="file-name" id="fileName">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+          <circle cx="6.5" cy="6.5" r="6" stroke="#3dd68c" stroke-width="1.2"/>
+          <path d="M4 6.5l2 2 3-3" stroke="#3dd68c" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span id="fileNameText"></span>
+      </div>
+    </div>
+
+    <div class="options-row">
+      <label class="option-chip active" id="chip-ts">
+        <input type="checkbox" checked />
+        <div class="chip-box">
+          <svg class="chip-check" width="10" height="8" viewBox="0 0 10 8">
+            <path d="M1 4l3 3 5-6" stroke="#0d0e11" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+        <span class="chip-label">Remove timestamps</span>
+      </label>
+      <label class="option-chip active" id="chip-blank">
+        <input type="checkbox" checked />
+        <div class="chip-box">
+          <svg class="chip-check" width="10" height="8" viewBox="0 0 10 8">
+            <path d="M1 4l3 3 5-6" stroke="#0d0e11" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+        <span class="chip-label">Collapse blank lines</span>
+      </label>
+      <label class="option-chip active" id="chip-meta">
+        <input type="checkbox" checked />
+        <div class="chip-box">
+          <svg class="chip-check" width="10" height="8" viewBox="0 0 10 8">
+            <path d="M1 4l3 3 5-6" stroke="#0d0e11" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+        <span class="chip-label">Strip SRT/VTT metadata</span>
+      </label>
+      <label class="option-chip" id="chip-merge">
+        <input type="checkbox" />
+        <div class="chip-box">
+          <svg class="chip-check" width="10" height="8" viewBox="0 0 10 8">
+            <path d="M1 4l3 3 5-6" stroke="#0d0e11" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+        <span class="chip-label">Merge into one paragraph</span>
+      </label>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-primary" id="cleanBtn" disabled>
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+          <path d="M2 4h11M2 7.5h7M2 11h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          <circle cx="12" cy="11" r="2.5" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M14 13l1.5 1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        Clean Transcript
+      </button>
+      <button class="btn-secondary" id="shiftBtn" disabled>
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+          <path d="M2 4h11M2 7.5h11M2 11h11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        Shift to Paragraph
+      </button>
+      <button class="btn-secondary" id="downloadTextBtn" disabled>
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+          <path d="M7.5 2v8M7.5 10L5 7.5M7.5 10L10 7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 12v1a1 1 0 001 1h9a1 1 0 001-1v-1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        Download Text
+      </button>
+    </div>
+
+    <div class="stats-bar" id="statsBar">
+      <div class="stat-card">
+        <div class="label">Lines removed</div>
+        <div class="value" id="stat-removed">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Word count</div>
+        <div class="value" id="stat-words">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Size reduced</div>
+        <div class="value" id="stat-size">0%</div>
+      </div>
+    </div>
+
+    <div class="output-wrap" id="outputWrap">
+      <div class="output-header">
+        <span>Clean Output</span>
+        <div class="output-actions">
+          <button class="btn-sm" id="copyBtn">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+              <rect x="1" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+              <path d="M4 4V3a1 1 0 011-1h5a1 1 0 011 1v5a1 1 0 01-1 1h-1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+            Copy
+          </button>
+          <button class="btn-sm" id="downloadBtn">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+              <path d="M6.5 1v8M6.5 9L4 6.5M6.5 9L9 6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M1.5 10v1a1 1 0 001 1h8a1 1 0 001-1v-1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+            Download
+          </button>
+        </div>
+      </div>
+      <textarea id="output" readonly placeholder="Clean text will appear here..."></textarea>
+    </div>
+
+  </main>
+
+  <footer>
+    <p>TranscriptCleaner — paste clean text into any AI, no signup required.</p>
+    <p>Built with vanilla JS · <a href="https://github.com" target="_blank">GitHub</a></p>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let rawContent = '';
+    let cleanedContent = '';
+
+    const fileInput      = document.getElementById('fileInput');
+    const dropZone       = document.getElementById('dropZone');
+    const fileNameEl     = document.getElementById('fileName');
+    const fileNameTxt    = document.getElementById('fileNameText');
+    const cleanBtn       = document.getElementById('cleanBtn');
+    const shiftBtn       = document.getElementById('shiftBtn');
+    const downloadTextBtn= document.getElementById('downloadTextBtn');
+    const outputArea     = document.getElementById('output');
+    const outputWrap     = document.getElementById('outputWrap');
+    const statsBar       = document.getElementById('statsBar');
+    const copyBtn        = document.getElementById('copyBtn');
+    const downloadBtn    = document.getElementById('downloadBtn');
+    const toast          = document.getElementById('toast');
+
+    const chips = document.querySelectorAll('.option-chip');
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        const cb = chip.querySelector('input[type="checkbox"]');
+        cb.checked = !cb.checked;
+        chip.classList.toggle('active', cb.checked);
+      });
+    });
+
+    function opt(id) {
+      return document.getElementById(id).querySelector('input').checked;
+    }
+
+    dropZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropZone.classList.add('drag-over');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('drag-over');
+    });
+
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) loadFile(file);
+    });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files[0]) loadFile(fileInput.files[0]);
+    });
+
+    function loadFile(file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        rawContent = e.target.result;
+        fileNameTxt.textContent = file.name;
+        fileNameEl.classList.add('visible');
+        cleanBtn.disabled = false;
+        shiftBtn.disabled = false;
+        showToast('File loaded — ready to clean');
+      };
+      reader.readAsText(file);
+    }
+
+    function cleanTranscript(text) {
+      const removeMeta   = opt('chip-meta');
+      const removeTS     = opt('chip-ts');
+      const collapseBlank= opt('chip-blank');
+      const mergeAll     = opt('chip-merge');
+
+      let lines = text.split('\n');
+      const originalLineCount = lines.length;
+      let keptLines = [];
+
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+
+        if (removeMeta) {
+          if (/^WEBVTT/.test(line.trim())) continue;
+          if (/^(NOTE|REGION|STYLE)(\s|$)/.test(line.trim())) continue;
+          if (/^\d+$/.test(line.trim())) continue;
+          if (/^(X-TIMESTAMP-MAP|Kind:|Language:|align:|position:|line:|size:)/.test(line.trim())) continue;
+        }
+
+        if (removeTS) {
+          if (/^\d{1,2}:\d{2}:\d{2}[.,]\d{3}\s*-->\s*\d{1,2}:\d{2}:\d{2}[.,]\d{3}/.test(line.trim())) continue;
+          if (/^\d{1,2}:\d{2}[.,]\d{3}\s*-->\s*\d{1,2}:\d{2}[.,]\d{3}/.test(line.trim())) continue;
+          if (/^[\[\(]?\d{1,2}:\d{2}(:\d{2})?([.,]\d{1,3})?[\]\)]?$/.test(line.trim())) continue;
+
+          line = line
+            .replace(/<\d{2}:\d{2}:\d{2}\.\d{3}>/g, '')
+            .replace(/\[\d{1,2}:\d{2}(:\d{2})?([.,]\d{1,3})?\]/g, '')
+            .replace(/\(\d{1,2}:\d{2}(:\d{2})?([.,]\d{1,3})?\)/g, '')
+            .replace(/\d{1,2}:\d{2}:\d{2}[.,]\d{1,3}/g, '')
+            .replace(/\b\d{1,2}:\d{2}\b/g, '');
+        }
+
+        line = line.replace(/<[^>]+>/g, '');
+        line = line.trim();
+
+        if (line === '') {
+          if (!collapseBlank) {
+            keptLines.push('');
+          } else {
+            if (keptLines.length && keptLines[keptLines.length - 1] !== '') {
+              keptLines.push('');
+            }
+          }
+          continue;
+        }
+
+        keptLines.push(line);
+      }
+
+      while (keptLines.length && keptLines[0] === '') keptLines.shift();
+      while (keptLines.length && keptLines[keptLines.length - 1] === '') keptLines.pop();
+
+      let result;
+      if (mergeAll) {
+        result = keptLines.filter(l => l !== '').join(' ');
+      } else {
+        result = keptLines.join('\n');
+      }
+
+      const removedLines = originalLineCount - keptLines.length;
+      const wordCount = result.split(/\s+/).filter(w => w.length > 0).length;
+      const sizeReduction = Math.round((1 - result.length / Math.max(text.length, 1)) * 100);
+
+      return { result, removedLines, wordCount, sizeReduction };
+    }
+
+    cleanBtn.addEventListener('click', () => {
+      if (!rawContent) return;
+
+      const { result, removedLines, wordCount, sizeReduction } = cleanTranscript(rawContent);
+      cleanedContent = result;
+
+      outputArea.value = result;
+      outputArea.removeAttribute('readonly');
+      outputWrap.classList.add('visible');
+
+      document.getElementById('stat-removed').textContent = removedLines.toLocaleString();
+      document.getElementById('stat-words').textContent   = wordCount.toLocaleString();
+      document.getElementById('stat-size').textContent    = sizeReduction + '%';
+      statsBar.classList.add('visible');
+
+      downloadTextBtn.disabled = false;
+
+      outputArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      showToast('Transcript cleaned successfully ✓');
+    });
+
+    shiftBtn.addEventListener('click', () => {
+      const input = outputArea.value || cleanedContent;
+      if (!input.trim()) {
+        showToast('Run "Clean Transcript" first');
+        return;
+      }
+      const shiftedText = input.replace(/[\r\n]+/g, ' ').replace(/\s\s+/g, ' ').trim();
+      outputArea.value = shiftedText;
+      cleanedContent = shiftedText;
+      downloadTextBtn.disabled = false;
+      outputWrap.classList.add('visible');
+      showToast('Shifted to single paragraph ✓');
+    });
+
+    downloadTextBtn.addEventListener('click', () => {
+      const content = outputArea.value;
+      if (!content.trim()) {
+        showToast('Nothing to download yet');
+        return;
+      }
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = 'Cleaned_Transcript.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Downloading Cleaned_Transcript.txt');
+    });
+
+    copyBtn.addEventListener('click', () => {
+      const content = outputArea.value;
+      if (!content.trim()) return;
+      navigator.clipboard.writeText(content).then(() => {
+        copyBtn.classList.add('copied');
+        copyBtn.innerHTML = `
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M2 7l3 3 6-6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>Copied!`;
+        showToast('Copied to clipboard');
+        setTimeout(() => {
+          copyBtn.classList.remove('copied');
+          copyBtn.innerHTML = `
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+              <rect x="1" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+              <path d="M4 4V3a1 1 0 011-1h5a1 1 0 011 1v5a1 1 0 01-1 1h-1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>Copy`;
+        }, 2000);
+      });
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const content = outputArea.value;
+      if (!content.trim()) return;
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = 'Cleaned_Transcript.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Downloading Cleaned_Transcript.txt');
+    });
+
+    let toastTimer;
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+  </script>
+</body>
+</html>
