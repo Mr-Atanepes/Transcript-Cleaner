@@ -1,0 +1,716 @@
+00:02 all right then gang so
+00:03 we saw in the last video that currently
+00:05 when we send incorrect data
+00:08 with our post request we get back a
+00:10 blanket error that looks something
+00:12 like this no matter what the error is
+00:14 whether that's an empty email property
+00:16 or the password is too short etc
+00:18 now that wouldn't be great to show a
+00:20 user on a web page because it doesn't
+00:21 offer
+00:22 any additional info so they won't know
+00:24 what to correct instead it would be good
+00:26 to create custom error messages for
+00:29 different types of errors
+00:30 and we'll be using a combination of
+00:33 custom error handling
+00:34 and mongoose validation errors to do
+00:36 this
+00:37 so back in the code we can first come to
+00:40 our mongoose user
+00:41 over here and we can add some custom
+00:44 error messages for the different
+00:45 conditions that we specified like this
+00:47 required so the way we do that
+00:50 is by surrounding this inside an array
+00:53 now the first
+00:54 value of the array is the actual value
+00:56 of this is it required well yes so this
+00:58 is true
+00:59 now we can pass in a second value into
+01:02 the array
+01:02 and that is a custom error message for
+01:05 if this
+01:06 fails so if they don't supply an email
+01:09 then we can trigger an error message
+01:11 which says
+01:12 this thing right here so all i'm going
+01:14 to say right here
+01:15 is please enter an email
+01:19 now i'm going to do the same thing for
+01:22 requires down
+01:23 on the password over here but this time
+01:25 i'm going to change this to
+01:26 password right now i also want to do the
+01:30 same thing for min
+01:31 length so let me surround this in square
+01:34 brackets and again
+01:35 the first position is going to be the
+01:37 value of the min length and then the
+01:39 second
+01:39 position is going to be the error
+01:41 message so i'm going to say minimum
+01:44 password length is
+01:47 six characters right so these are the
+01:50 error messages
+01:51 that we're going to basically throw if
+01:53 these conditions
+01:55 aren't matched when a user tries to
+01:56 submit the form and we try to create the
+01:59 user
+01:59 right now we also need for the email
+02:03 an extra property right here called
+02:06 validate
+02:07 now the reason i'm doing this is because
+02:09 we want our email to be a valid email
+02:11 address at the minute they could just
+02:12 type in
+02:13 any string like a name and there's
+02:15 nothing here that says
+02:16 otherwise so i could just type in mario
+02:19 and
+02:19 well it's a string it's there we've
+02:21 typed something in
+02:22 it's unique it's not in the database and
+02:24 we've turned it to lowercase but there's
+02:26 nothing saying
+02:26 it has to be an email so we can add this
+02:30 validate property to any different field
+02:33 inside our schema
+02:34 and this is going to be an array again
+02:37 the first position in this
+02:38 is going to be a function so i could
+02:41 create a function
+02:42 right here which does something in here
+02:44 some custom validation
+02:46 now inside this function we
+02:47 automatically take in a value and that
+02:50 value is the value of the user email
+02:52 that is submitted to whatever the user
+02:54 types
+02:54 when we click submit so we take that
+02:56 value and we can
+02:58 validate it inside this function now
+03:00 we'd return true
+03:01 if we think it's valid and it passes we
+03:03 return false if we think it's not valid
+03:06 and in that case we would throw an error
+03:08 with this error message the second
+03:10 position
+03:10 in the array so i could say please
+03:14 enter a valid email so
+03:17 inside this function you would want to
+03:19 do something to validate that email
+03:20 so to do this we could use a regular
+03:22 expression for email and match it
+03:24 against what a user submits
+03:26 but also we could just use a third-party
+03:29 validation package
+03:30 which is what i'll do so this package is
+03:33 called
+03:33 validator and i'm going to install it
+03:35 first of all so
+03:36 we need to create a new console and i'm
+03:39 going to say npm
+03:40 install validator now
+03:43 if you've got an old version of node and
+03:46 npm then you need to pass in the save
+03:48 flag
+03:48 like so to save it to your dependencies
+03:50 i've got a newer version so i don't need
+03:52 to do that
+03:52 and it's automatically going to register
+03:54 it inside my dependencies
+03:56 right here okay so now we have that
+03:59 installed
+04:00 the next thing to do is import something
+04:02 from that package at the top over here
+04:05 so this package has different functions
+04:07 inside it that we can use to validate
+04:09 different things
+04:09 and one of those things is to validate
+04:12 an email
+04:12 so i want to import that function to
+04:15 validate an email
+04:16 from the validator package so i'm going
+04:19 to say const
+04:20 and d structure to get the is email
+04:23 function so this is coming from the
+04:26 validator package
+04:28 we just installed so all we need to do
+04:31 down here now
+04:32 is instead of creating our own function
+04:35 just passing
+04:36 is email like so now this triggers a
+04:39 function and it automatically passes
+04:41 that value into it
+04:43 that a user submits for the email and
+04:45 then this
+04:46 looks at that value and it returns true
+04:48 if it is a valid email
+04:49 false if it's not a valid email okay
+04:52 so that's pretty much it for our custom
+04:55 errors
+04:56 right here we will come back to this one
+04:57 later on because we're going to handle
+04:58 that
+04:59 slightly differently but for now this
+05:02 will do
+05:03 now before we go any further i have just
+05:05 noticed an
+05:06 error right here this min length
+05:08 property should not be camelcase and
+05:10 this l should not be a capital letter
+05:12 make sure that is a lowercase otherwise
+05:14 this won't work okay so now we have all
+05:16 of these different validation messages
+05:18 but at the moment
+05:19 they are not really doing anything if we
+05:22 were to send
+05:22 a request with invalid data we would
+05:25 still get back this blanket error
+05:26 message
+05:27 as we can see right here and that's
+05:29 because in the auth controller we're
+05:31 sending that right here so we're kind of
+05:33 ignoring this error object that we catch
+05:35 and that error object contains this kind
+05:38 of
+05:38 information on it so what we really want
+05:41 to do
+05:41 is evaluate this error object to see
+05:43 what kind of error
+05:44 is and then send back to the user
+05:46 something more useful
+05:48 like one of these messages or if there's
+05:51 several errors
+05:52 for example an error for the email and
+05:53 an error for the password
+05:55 send back both of those messages so
+05:58 ultimately i'd like to send back an
+06:00 object right here a json object instead
+06:02 of just a string
+06:03 and that json object will contain a
+06:05 password property
+06:06 and an email property now the password
+06:09 property will hold the password error if
+06:11 there is one
+06:12 or a blank string or an empty string if
+06:14 there's not an error
+06:15 and the email property will contain the
+06:17 email error if there is one
+06:19 so all of this evaluating of this error
+06:22 object right here
+06:23 should probably be done in a separate
+06:25 function so we're not bloating our code
+06:26 right here
+06:27 and duplicating code later on when we do
+06:29 a similar thing down here
+06:30 so let us now create a function at the
+06:33 top of this file
+06:34 to handle these errors so handle errors
+06:37 and we'll create a const called handle
+06:41 errors and that is going to take in the
+06:43 error object that we catch
+06:45 down in the try catch block right here
+06:48 so what we can do now is just call that
+06:49 function handle errors
+06:51 and pass in the error object so up here
+06:55 this is where we're going to evaluate
+06:56 the error object and return
+06:58 a more useful object which we can then
+07:01 send back as json to the user
+07:03 now to begin with all i'm going to do is
+07:05 log to the console
+07:07 the error message now the message
+07:10 property comes on all of the errors that
+07:12 we get
+07:13 and it contains information about what
+07:15 type of error this is
+07:17 now i'm also going to log out something
+07:18 else and that is the error code
+07:20 now this code property doesn't exist on
+07:22 most of the areas that we're going to
+07:23 get
+07:24 but it does exist on one specific error
+07:26 that we're going to handle in the future
+07:28 in particular that is the unique error
+07:31 but we'll come to that later on
+07:33 most of the time this will be undefined
+07:35 but later we will
+07:36 need it okay so let's just take a look
+07:39 at this error message
+07:40 when we send some invalid data so
+07:44 let me first of all go over here and
+07:45 press send and then
+07:47 if we go back to the code we should see
+07:50 down in the console if we open up the
+07:52 other terminal
+07:53 this thing right here so this is the
+07:55 error message
+07:57 and it contains user validation failed
+08:00 and then it says please enter an email
+08:01 and also please enter a password
+08:03 this right here this is the error code
+08:06 like i said undefined
+08:07 for the most part okay so this
+08:10 is if we don't enter an email and if we
+08:12 don't enter a password but what if we
+08:14 enter in something like mario which is
+08:16 not a valid email
+08:17 and also just one two three which isn't
+08:20 at least six characters long
+08:21 so this should still fail on two
+08:23 accounts right because
+08:25 inside the model it must be a valid
+08:27 email and it must be at least
+08:29 six characters long so let me send
+08:32 this request and over here we can see
+08:35 again
+08:36 user validation failed so this is the
+08:38 same in both
+08:39 instances and this time it says please
+08:42 enter a valid email
+08:43 not please enter an email and it says
+08:45 the minimum password length is six
+08:47 characters
+08:48 again the code is undefined so the
+08:50 common thing here is
+08:51 this string right here user validation
+08:54 failed
+08:55 so anytime there's any kind of error
+08:57 which is dictated by
+08:58 any one of these fields right here
+09:00 required validate
+09:02 required and min length then the error
+09:04 message that we get is going to contain
+09:07 this thing right here so we can look
+09:10 for the presence of this in the error
+09:12 message in order to handle these kind of
+09:14 errors
+09:15 in a particular way so let's do that
+09:18 down here the first thing i'm actually
+09:21 going to do is
+09:22 create an errors object so errors is
+09:24 equal to an object and inside here we'll
+09:27 have an email property
+09:28 which will be an empty string to begin
+09:30 with and a password property which will
+09:32 be an
+09:32 empty string to begin with as well now
+09:35 eventually
+09:35 this is the thing that will be sent as
+09:37 json back to the user
+09:39 so if there's an email error we'll
+09:41 update this property
+09:42 if there's a password error we'll update
+09:44 this property we're going to return that
+09:46 at the end of this function so that down
+09:49 here
+09:50 we can store it in a constant by saying
+09:52 const errors is equal
+09:54 to whatever this function returns and
+09:57 then we can
+09:57 send that as a response right here as
+10:00 json right
+10:01 so this is what we need to populate now
+10:04 dependent on the errors
+10:06 so let's look for the presence of this
+10:08 user validation failed
+10:09 inside this error message first of all
+10:12 so
+10:12 first of all i'll do a little comment to
+10:15 say validation errors
+10:18 i like that and then i'm going to say if
+10:21 and we're going to take a look at the
+10:22 error
+10:23 message and we're going to see if that
+10:25 includes
+10:26 a certain phrase and that phrase is
+10:28 going to be this
+10:29 thing right here so let me grab that
+10:32 copy it and paste it in here
+10:34 and now if this is the case then we can
+10:37 do something
+10:38 with that error now all i'm going to do
+10:41 for now is
+10:41 log that to the console console.log the
+10:44 error just so that we can see it
+10:46 so if i save this now and try to send
+10:50 a request like this with invalid data so
+10:52 send that
+10:53 and both fields are invalid right let's
+10:56 take a look at this object
+10:58 now it is quite messy to see right here
+11:00 in the console it's not
+11:02 a great way of looking at them but
+11:04 hopefully we will see this in a second
+11:06 so this is the error object right here
+11:09 so first of all we get the error message
+11:11 at the top right this is the thing where
+11:13 it says user validation failed
+11:15 please enter an email please make sure
+11:17 the minimum password length is six
+11:19 characters etc
+11:20 now down here we can actually see inside
+11:23 the error object we have another
+11:26 property called
+11:27 errors so inside this object we have
+11:30 the different errors that is created
+11:34 by this request now there should be two
+11:36 of them because this validation will
+11:37 fail
+11:38 and this will fail as well so inside
+11:39 this error object or errors object
+11:41 rather
+11:42 there should be two properties one for
+11:44 email and one for password
+11:46 so if we scroll down a little bit we can
+11:48 see right here the first one
+11:50 email right so we can see there's a
+11:52 validator error
+11:53 please enter a valid email and down here
+11:56 on this email object as well we see
+11:58 other things we have a properties
+12:00 property and we'll need that in a second
+12:02 we also have
+12:03 the path and the path basically says
+12:06 what property
+12:07 that we're failing on so the email in
+12:09 this case uh the value which is what i
+12:11 use entered etc
+12:13 so that's the first object inside the
+12:16 errors
+12:16 object okay so the second one
+12:19 is the password because we had an error
+12:21 for the password as well and that's a
+12:23 minimum length
+12:24 error so again down here we have the
+12:26 properties which we'll need in a second
+12:28 we'll take a look at that in a minute
+12:30 and we also have the kind of error well
+12:32 it's a min length error
+12:33 the path so what field failed and that
+12:36 was the password one
+12:37 and the value that a user tried to
+12:39 create and that was one
+12:40 two three right so ultimately remember
+12:44 the end game here
+12:45 is to populate this with an email error
+12:48 and a password error if there are them
+12:50 okay so
+12:52 really what we want to do is access
+12:54 inside
+12:55 this error object right here the errors
+12:59 property this thing right here this
+13:01 errors property contains the errors it's
+13:03 got two keys in it email
+13:04 and password and both of those then
+13:07 contain information about
+13:08 those individual errors so
+13:11 we need to take this errors property
+13:14 right here
+13:15 and we want to get the values of each
+13:18 one of these things inside it we don't
+13:20 necessarily need the key
+13:21 we want the values of each key inside it
+13:24 so how can we get those
+13:26 well what we can do is we can use
+13:28 object.values and then pass in this
+13:30 errors object and that gets us the
+13:32 values
+13:33 of both of the different fields inside
+13:36 it so this
+13:37 value with the properties the kind the
+13:39 path and also
+13:40 this value from the password
+13:43 so let me just do that first of all let
+13:45 me log those to the console console.log
+13:48 and we want the error overall object
+13:51 then we want the errors
+13:52 object inside that which is this thing
+13:55 right here
+13:56 and then we want the values of those
+13:58 properties
+13:59 so the way we do that is by saying
+14:00 object dot values and then surrounding
+14:03 this
+14:03 okay so it takes this object right here
+14:07 this errors object and it gets us the
+14:09 values
+14:10 of the different things inside that
+14:12 object so not
+14:14 the keys but the values so if i log that
+14:17 to the console now if i save it
+14:19 and just quickly this must be a capital
+14:22 o otherwise this won't work so save that
+14:24 again
+14:24 and now let's try sending a request
+14:27 and if we go back we should be able to
+14:30 see
+14:30 these different values so we can see we
+14:33 have
+14:34 these different objects right here so
+14:35 let me just show you we have this
+14:38 array and the first one the first object
+14:41 is right here with the different
+14:42 properties and other information
+14:44 and remember these properties are
+14:45 ultimately what we want to get because
+14:47 they contain the message that we write
+14:49 and also the path to say what property
+14:52 we need to update
+14:54 and the second one down here is for the
+14:56 password
+14:57 so we have again the properties with the
+14:59 message inside it
+15:00 and the path etc okay so we want those
+15:04 ultimately but now we have an array
+15:06 of the values so what we could do is we
+15:08 could actually
+15:09 cycle through that array of values
+15:12 right here and then for each one of them
+15:15 extract the information that we need
+15:17 and update these different properties so
+15:20 let me now say
+15:21 for each on these so we can do that
+15:23 remember because this is an array
+15:25 and for each one we'll take in the
+15:27 individual
+15:28 error and inside here i'm going to just
+15:33 console.log
+15:34 the error and i'm going to log the
+15:36 properties property
+15:38 on each one of them all right so error
+15:40 dot properties
+15:42 like so so let me save that again and
+15:45 come and try to send a request
+15:47 that's not valid again and if we come
+15:50 back over here
+15:51 now if we scroll down we should have two
+15:54 objects right here
+15:55 we have this one and we have this one so
+15:58 this is ultimately
+15:59 what we need so for each one of these
+16:01 now we can say okay well the path is
+16:03 email so this is
+16:04 an email error so i'll take this
+16:06 property right here
+16:07 and we're going to update that and i'll
+16:09 set the message or the value of that
+16:11 property
+16:12 to be this thing right here and i can do
+16:14 the same
+16:15 for this one as well i'll say well okay
+16:17 this time the path is password so i'll
+16:19 update the password property
+16:20 and i'm going to set the value of that
+16:22 equal to this thing okay
+16:24 so what i could do is instead of
+16:28 passing in the error right here i could
+16:30 destructure
+16:31 and get the properties
+16:35 from the error like that and to do that
+16:37 i need to place this in parentheses
+16:40 so now all we're doing is destructuring
+16:41 the properties property
+16:43 from the error and now we have access to
+16:45 that without saying error.properties
+16:47 this does exactly the same thing and i
+16:49 can demo that
+16:51 by sending a request again
+16:54 and over here we get the two same values
+16:57 so these are the properties objects
+16:58 right
+16:59 okay so we have those now what is the
+17:02 next step
+17:03 well all i want to do now is access the
+17:05 errors that i have
+17:07 right here or the error object rather
+17:09 and
+17:10 then i need to decide which property i
+17:13 want to update
+17:14 well to do that i can pass in a string
+17:17 inside
+17:17 square brackets so for example i could
+17:19 say email right here
+17:20 and set that equal to some value and
+17:23 that would
+17:24 take this property right here the email
+17:26 based on this
+17:27 and it would update it with this value
+17:29 now instead of passing through email i
+17:31 can get
+17:32 that from the properties path property
+17:34 right here
+17:35 so i'm going to say properties
+17:39 dot path so that's either going to be
+17:41 email or
+17:42 password right so it's going to take
+17:44 whatever property that is and
+17:46 update it with something now i want to
+17:48 update it with
+17:49 the message so i can say properties
+17:53 dot message like so and that's all there
+17:56 is to it
+17:57 now we're updating this error object
+18:00 right here and in fact
+18:01 i'm going to call this errors instead of
+18:03 error makes more sense because there
+18:04 could be more than one
+18:06 so update it here and here so we're
+18:08 updating those with
+18:09 the different messages we have and if
+18:11 there's only one of these
+18:13 then we're just going to cycle through
+18:14 the one of them and update that
+18:16 particular property the other one
+18:17 will remain blank meaning there's no
+18:19 error all right
+18:21 now at the end of all of this we want to
+18:23 return the errors
+18:24 object that we have right here so let's
+18:27 do that
+18:28 so i'm going to save this now and if we
+18:30 scroll down
+18:32 then we're getting those errors right
+18:34 here because we're returning them from
+18:35 this function
+18:36 and now we can send back some json
+18:39 instead of just some text so
+18:41 dot json and inside we want to send back
+18:44 some json
+18:45 and that is basically going to be the
+18:48 errors that we have
+18:49 okay so that's all there is to it we're
+18:51 sending now this thing
+18:52 up here back to the user in json format
+18:56 after we've populated the different
+18:58 values so let's try this
+19:00 and come over here so we need to send a
+19:03 new request now and hopefully we should
+19:05 see an error for this and an error for
+19:07 this
+19:07 so send and we see please enter a valid
+19:10 email
+19:10 and minimum password length is six
+19:12 characters so
+19:14 let's do an email so at google.com
+19:17 and press send and that value goes away
+19:21 that error but we still have this one
+19:23 so let's do test123 instead
+19:26 and press send and hopefully
+19:29 yep this works and we get the user back
+19:31 that mongodb creates
+19:33 for us okay so there's one more error
+19:36 that we need to handle
+19:37 and that is to do with whether an email
+19:40 is unique
+19:41 so if i try to do this again and click
+19:43 send
+19:44 then i'm going to get some errors right
+19:46 here but
+19:48 this time we don't have any information
+19:50 here so we don't really know what the
+19:52 error is
+19:53 now the error is that this has to be
+19:55 unique remember we specified that inside
+19:57 the user controller over here where we
+20:00 said unique is true
+20:01 now unfortunately we can't do a custom
+20:04 message over here for an error like the
+20:08 other ones
+20:08 over here we can't do that with unique
+20:11 instead what we have to do
+20:12 is look for information about this error
+20:16 over here and that information is the
+20:18 error code
+20:19 so notice when i sent this request over
+20:21 here we get this error code right here
+20:24 and it says
+20:24 duplicate key error so basically this is
+20:27 saying that
+20:28 this email that you're trying to sign up
+20:30 with should be unique
+20:31 and this email already exists in the
+20:33 database and if we take a look inside
+20:36 the database
+20:37 if i scoot this down and go to mongodb
+20:40 i'm going to refresh over here
+20:42 we should now see mario at google.com
+20:45 as a user so it won't create that again
+20:49 and that's a good thing but we do need
+20:50 to update the error
+20:52 for this so we can look for this code
+20:54 and we can
+20:55 react to that and send back a custom
+20:57 error based on that
+20:59 so let's do that now i'm going to say
+21:00 duplicate
+21:02 error code and underneath this i'm going
+21:05 to say if
+21:07 error.code is triple equal to 1 1
+21:10 0 0 0 so that's this thing over here
+21:14 then we're going to do something so the
+21:17 thing we want to do
+21:18 is update this property so i'll say
+21:20 errors
+21:22 dot email is equal to some kind of
+21:25 string and i'll say that
+21:26 email is already registered all right
+21:30 so at this point we can just return
+21:33 the errors like so there's no need to go
+21:35 any further and check these errors as
+21:37 well because we already have this
+21:38 whopping error
+21:39 and we can tell that to the user so
+21:41 we're returning errors here
+21:43 if this is the case otherwise we return
+21:45 them at the bottom after we've done all
+21:46 of this jazz
+21:47 are right here so let's save this and
+21:50 see if this works
+21:51 so if i go back over to oops i need
+21:54 postman
+21:55 so if i try to request this again send
+21:59 it should say that email is already
+22:01 registered
+22:02 all right then cool so now we've sorted
+22:04 all of our errors out by using this
+22:06 error handler function
+22:07 at the top right here now this bit right
+22:10 here i know
+22:11 was a little kind of long-winded and a
+22:13 little bit complex but it's just a way
+22:16 to create custom messages there are
+22:18 other ways to handle errors as well
+22:20 and you might have your own preferred
+22:22 way this is just one way by cycling
+22:24 through the values of the errors
+22:26 finding the message for each one and
+22:28 updating an errors object
+22:30 with that message right here so we have
+22:33 all of these errors
+22:34 sorted out now eventually we will show
+22:37 all of the errors on the web form
+22:39 after a user submits it whether that be
+22:40 the login form or the signup form
+22:42 and we will create those forms
+22:44 eventually but next up before we create
+22:46 the forms
+22:46 i want to show you first of all how to
+22:48 hash passwords
+22:50 and for that we're going to be using
+22:51 mongoose hooks because
+22:53 we never really want to store
+22:56 plain text passwords over here in the
+22:59 database that is a
+23:00 bad bad idea in case your database is
+23:03 compromised
+23:04 and all of your passwords are then on
+23:05 show so we'll be hashing those passwords
+23:07 first of all
+23:08 and we'll see how to do that or how to
+23:10 start that process at least
+23:12 in the next video using mongoose hooks
